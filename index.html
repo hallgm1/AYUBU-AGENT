@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AYOUB AGENT - INVOICE GENERATOR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body class="bg-slate-100 font-sans p-4">
+
+    <div class="max-w-md mx-auto space-y-4">
+        <div class="bg-white p-6 rounded-[2rem] shadow-lg">
+            <h2 class="text-lg font-black uppercase mb-4 text-slate-800">1. Paste Request</h2>
+            <textarea id="rawInput" rows="4" placeholder="Paste the customer WhatsApp text here..." 
+                class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl text-sm outline-none focus:border-green-600"></textarea>
+            <button onclick="parseRequest()" class="w-full mt-2 bg-slate-800 text-white py-3 rounded-xl font-bold uppercase text-xs">Extract Details</button>
+        </div>
+
+        <div class="bg-white p-6 rounded-[2rem] shadow-lg space-y-4">
+            <h2 class="text-lg font-black uppercase text-slate-800">2. Fill Blanks</h2>
+            <div class="grid grid-cols-2 gap-3">
+                <input type="text" id="busName" placeholder="Bus Name" class="p-3 bg-gray-50 rounded-xl border border-gray-100 text-sm">
+                <input type="text" id="busReg" placeholder="Reg Number" class="p-3 bg-gray-50 rounded-xl border border-gray-100 text-sm">
+                <input type="text" id="seat" placeholder="Seat No" class="p-3 bg-gray-50 rounded-xl border border-gray-100 text-sm">
+                <input type="number" id="baseFare" oninput="calcFare()" placeholder="Base Fare" class="p-3 bg-green-50 border-green-200 rounded-xl border text-sm font-bold">
+            </div>
+            <button onclick="generateInvoice()" class="w-full bg-green-600 text-white py-4 rounded-2xl font-black uppercase shadow-lg">Create Trip Invoice</button>
+        </div>
+
+        <div id="invoiceCapture" class="bg-white rounded-lg shadow-2xl overflow-hidden border border-gray-200 hidden">
+            <div class="bg-green-700 p-4 flex justify-between items-center text-white">
+                <span class="font-black italic">AYOUB TRAVEL</span>
+                <span class="bg-white text-green-700 text-[10px] px-2 py-1 rounded-md font-bold">PAID</span>
+            </div>
+            
+            <div class="p-6 space-y-4 text-slate-800">
+                <div class="flex justify-between items-center border-b pb-4">
+                    <div>
+                        <p class="text-[10px] text-gray-400 font-bold uppercase">Passenger</p>
+                        <p id="invName" class="font-bold text-sm">-</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] text-gray-400 font-bold uppercase">Date</p>
+                        <p id="invDate" class="font-bold text-sm">-</p>
+                    </div>
+                </div>
+
+                <div class="space-y-2 text-xs">
+                    <div class="flex justify-between"><span class="text-gray-400">Route:</span><span id="invRoute" class="font-bold">-</span></div>
+                    <div class="flex justify-between"><span class="text-gray-400">Bus:</span><span id="invBus" class="font-bold">-</span></div>
+                    <div class="flex justify-between"><span class="text-gray-400">Reg No:</span><span id="invReg" class="font-bold uppercase">-</span></div>
+                    <div class="flex justify-between"><span class="text-gray-400">Seat:</span><span id="invSeat" class="font-bold">-</span></div>
+                    <div class="flex justify-between"><span class="text-gray-400">Reporting:</span><span class="font-bold">05:30 AM</span></div>
+                    <div class="flex justify-between"><span class="text-gray-400">Departure:</span><span class="font-bold">06:00 AM</span></div>
+                </div>
+
+                <div class="bg-slate-50 p-4 rounded-xl flex justify-between items-center border-t-2 border-slate-200 mt-4">
+                    <span class="text-xs font-black text-slate-500 uppercase">Total Fare</span>
+                    <span id="invFare" class="text-xl font-black text-slate-900">TZS 0</span>
+                </div>
+
+                <div class="flex flex-col items-center pt-4 opacity-50">
+                    <div class="w-16 h-16 bg-slate-200 rounded-md mb-2"></div>
+                    <p class="text-[8px] uppercase tracking-widest font-bold">Lipa Namba: 5266238</p>
+                </div>
+            </div>
+        </div>
+        
+        <p class="text-[10px] text-center text-gray-400 uppercase font-bold py-4">© HallGM1 Empire Agency</p>
+    </div>
+
+    <script>
+        let extractedData = {};
+        const MARGIN = 0.035;
+
+        function parseRequest() {
+            const text = document.getElementById('rawInput').value;
+            const nameMatch = text.match(/\*PASSENGER:\*\s*(.*)/);
+            const routeMatch = text.match(/\*ROUTE:\*\s*(.*)/);
+            const dateMatch = text.match(/\*DATE:\*\s*(.*)/);
+
+            if(nameMatch) document.getElementById('invName').innerText = nameMatch[1];
+            if(routeMatch) document.getElementById('invRoute').innerText = routeMatch[1];
+            if(dateMatch) document.getElementById('invDate').innerText = dateMatch[1];
+            
+            alert("Details Extracted!");
+        }
+
+        function calcFare() {
+            const base = parseFloat(document.getElementById('baseFare').value || 0);
+            const total = Math.round(base * (1 + MARGIN));
+            document.getElementById('invFare').innerText = `TZS ${total.toLocaleString()}`;
+        }
+
+        function generateInvoice() {
+            document.getElementById('invBus').innerText = document.getElementById('busName').value;
+            document.getElementById('invReg').innerText = document.getElementById('busReg').value;
+            document.getElementById('invSeat').innerText = document.getElementById('seat').value;
+            
+            const element = document.getElementById('invoiceCapture');
+            element.classList.remove('hidden');
+            
+            // This allows Ayoub to take a screenshot easily
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+    </script>
+</body>
+</html>
