@@ -13,7 +13,7 @@
             <h2 class="text-xs font-black uppercase tracking-widest mb-4 text-slate-400">1. Paste Request</h2>
             <textarea id="rawInput" rows="4" placeholder="Paste the customer WhatsApp text here..." 
                 class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl text-sm outline-none focus:border-green-600"></textarea>
-            <button onclick="parseRequest()" class="w-full mt-2 bg-slate-800 text-white py-3 rounded-xl font-bold uppercase text-xs">Extract Details</button>
+            <button onclick="parseRequest()" class="w-full mt-2 bg-slate-800 text-white py-3 rounded-xl font-bold uppercase text-xs active:scale-95 transition-all">Extract Details</button>
         </div>
 
         <div class="bg-white p-6 rounded-[2rem] shadow-lg space-y-4">
@@ -23,13 +23,22 @@
                 <input type="text" id="busReg" placeholder="Reg Number" class="p-3 bg-gray-50 rounded-xl border border-gray-100 text-sm outline-none uppercase">
                 <input type="text" id="seat" placeholder="Seat No" class="p-3 bg-gray-50 rounded-xl border border-gray-100 text-sm outline-none">
                 <input type="number" id="baseFare" oninput="calcFare()" placeholder="Base Fare" class="p-3 bg-green-50 border-green-200 rounded-xl border text-sm font-bold outline-none">
+                
+                <div class="flex flex-col">
+                    <label class="text-[9px] font-bold text-gray-400 ml-1 uppercase">Reporting</label>
+                    <input type="text" id="reportTime" value="05:30 AM" class="p-3 bg-gray-50 rounded-xl border border-gray-100 text-sm outline-none">
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-[9px] font-bold text-gray-400 ml-1 uppercase">Departure</label>
+                    <input type="text" id="depTime" value="06:00 AM" class="p-3 bg-gray-50 rounded-xl border border-gray-100 text-sm outline-none">
+                </div>
             </div>
-            <button onclick="generateInvoice()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase shadow-lg">Generate Invoice View</button>
+            <button onclick="generateInvoice()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase shadow-lg active:scale-95 transition-all">Generate Invoice View</button>
         </div>
 
         <div id="invoiceCapture" class="bg-white rounded-[2rem] shadow-2xl overflow-hidden border border-gray-200 hidden">
             <div class="bg-green-700 p-4 flex justify-between items-center text-white">
-                <span class="font-black italic">AYOUB TRAVEL</span>
+                <span class="font-black italic tracking-tighter">AYOUB TRAVEL</span>
                 <span class="bg-white text-green-700 text-[10px] px-2 py-1 rounded-md font-bold uppercase">Paid Invoice</span>
             </div>
             
@@ -37,7 +46,7 @@
                 <div class="flex justify-between items-center border-b pb-4">
                     <div>
                         <p class="text-[10px] text-gray-400 font-bold uppercase">Passenger</p>
-                        <p id="invName" class="font-bold text-sm">-</p>
+                        <p id="invName" class="font-bold text-sm uppercase">-</p>
                     </div>
                     <div class="text-right">
                         <p class="text-[10px] text-gray-400 font-bold uppercase">Date</p>
@@ -46,21 +55,21 @@
                 </div>
 
                 <div class="space-y-2 text-xs">
-                    <div class="flex justify-between"><span class="text-gray-400">Route:</span><span id="invRoute" class="font-bold">-</span></div>
-                    <div class="flex justify-between"><span class="text-gray-400">Bus Name:</span><span id="invBus" class="font-bold">-</span></div>
+                    <div class="flex justify-between"><span class="text-gray-400">Route:</span><span id="invRoute" class="font-bold uppercase">-</span></div>
+                    <div class="flex justify-between"><span class="text-gray-400">Bus Name:</span><span id="invBus" class="font-bold uppercase">-</span></div>
                     <div class="flex justify-between"><span class="text-gray-400">Reg No:</span><span id="invReg" class="font-bold uppercase">-</span></div>
                     <div class="flex justify-between"><span class="text-gray-400">Seat:</span><span id="invSeat" class="font-bold">-</span></div>
-                    <div class="flex justify-between"><span class="text-gray-400">Reporting:</span><span class="font-bold text-green-700">05:30 AM</span></div>
-                    <div class="flex justify-between"><span class="text-gray-400">Departure:</span><span class="font-bold text-green-700">06:00 AM</span></div>
+                    <div class="flex justify-between border-t pt-2 mt-2"><span class="text-gray-400">Reporting:</span><span id="invReport" class="font-bold text-green-700">-</span></div>
+                    <div class="flex justify-between"><span class="text-gray-400">Departure:</span><span id="invDep" class="font-bold text-green-700">-</span></div>
                 </div>
 
                 <div class="bg-slate-50 p-4 rounded-2xl flex justify-between items-center border-t-2 border-slate-200 mt-4">
-                    <span class="text-xs font-black text-slate-500 uppercase">Total Fare (Incl. Fee)</span>
+                    <span class="text-xs font-black text-slate-500 uppercase">Total Fare (Incl Fee)</span>
                     <span id="invFare" class="text-xl font-black text-slate-900">TZS 0</span>
                 </div>
 
                 <button onclick="shareToWhatsApp()" class="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black uppercase shadow-lg flex items-center justify-center space-x-2 mt-4 active:scale-95 transition-all">
-                    <span>Share to Group</span>
+                    <span>Share to WhatsApp Group</span>
                 </button>
             </div>
         </div>
@@ -74,15 +83,20 @@
 
         function parseRequest() {
             const text = document.getElementById('rawInput').value;
-            const nameMatch = text.match(/\*PASSENGER:\*\s*(.*)/);
-            const routeMatch = text.match(/\*ROUTE:\*\s*(.*)/);
-            const dateMatch = text.match(/\*DATE:\*\s*(.*)/);
+            // Enhanced Regex to capture details even with different spacing
+            const nameMatch = text.match(/\*PASSENGER:\*\s*(.*)/i);
+            const routeMatch = text.match(/\*ROUTE:\*\s*(.*)/i);
+            const dateMatch = text.match(/\*DATE:\*\s*(.*)/i);
 
-            if(nameMatch) document.getElementById('invName').innerText = nameMatch[1];
-            if(routeMatch) document.getElementById('invRoute').innerText = routeMatch[1];
-            if(dateMatch) document.getElementById('invDate').innerText = dateMatch[1];
+            if(nameMatch) document.getElementById('invName').innerText = nameMatch[1].trim();
+            if(routeMatch) document.getElementById('invRoute').innerText = routeMatch[1].trim();
+            if(dateMatch) document.getElementById('invDate').innerText = dateMatch[1].trim();
             
-            alert("Details Extracted Successfully!");
+            if(nameMatch || routeMatch || dateMatch) {
+                alert("Trip details extracted!");
+            } else {
+                alert("Could not find details. Please check the text format.");
+            }
         }
 
         function calcFare() {
@@ -92,41 +106,37 @@
         }
 
         function generateInvoice() {
-            document.getElementById('invBus').innerText = document.getElementById('busName').value;
-            document.getElementById('invReg').innerText = document.getElementById('busReg').value.toUpperCase();
-            document.getElementById('invSeat').innerText = document.getElementById('seat').value;
+            document.getElementById('invBus').innerText = document.getElementById('busName').value || "-";
+            document.getElementById('invReg').innerText = document.getElementById('busReg').value.toUpperCase() || "-";
+            document.getElementById('invSeat').innerText = document.getElementById('seat').value || "-";
+            document.getElementById('invReport').innerText = document.getElementById('reportTime').value;
+            document.getElementById('invDep').innerText = document.getElementById('depTime').value;
             
             const element = document.getElementById('invoiceCapture');
             element.classList.remove('hidden');
-            window.scrollTo(0, document.body.scrollHeight);
+            element.scrollIntoView({ behavior: 'smooth' });
         }
 
         function shareToWhatsApp() {
-            const name = document.getElementById('invName').innerText;
-            const route = document.getElementById('invRoute').innerText;
-            const date = document.getElementById('invDate').innerText;
-            const bus = document.getElementById('invBus').innerText;
-            const reg = document.getElementById('invReg').innerText;
-            const seat = document.getElementById('invSeat').innerText;
-
             const message = `*AYOUB TRAVEL - TRIP INVOICE*\n` +
                             `----------------------------\n` +
-                            `*PASSENGER:* ${name}\n` +
-                            `*BUS INFO:* ${bus}\n` +
-                            `*REG NO:* ${reg}\n` +
-                            `*ROUTE:* ${route}\n` +
-                            `*DATE:* ${date}\n` +
-                            `*SEAT:* ${seat}\n` +
+                            `*PASSENGER:* ${document.getElementById('invName').innerText}\n` +
+                            `*BUS INFO:* ${document.getElementById('invBus').innerText}\n` +
+                            `*REG NO:* ${document.getElementById('invReg').innerText}\n` +
+                            `*ROUTE:* ${document.getElementById('invRoute').innerText}\n` +
+                            `*DATE:* ${document.getElementById('invDate').innerText}\n` +
+                            `*SEAT:* ${document.getElementById('invSeat').innerText}\n` +
                             `*TOTAL FARE:* TZS ${finalFare.toLocaleString()}\n` +
                             `----------------------------\n` +
-                            `*REPORTING:* [05:30 HRS]\n` +
-                            `*DEPARTURE:* [06:00 HRS]\n` +
+                            `*REPORTING:* ${document.getElementById('invReport').innerText}\n` +
+                            `*DEPARTURE:* ${document.getElementById('invDep').innerText}\n` +
                             `*LIPA NO:* 5266238\n` +
                             `----------------------------\n` +
                             `*NB:* PLEASE SEND SCREENSHOT FOR PAYMENT CONFIRMATION.`;
 
-            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-            window.open(whatsappUrl, '_blank');
+            // This opens WhatsApp with the text pre-filled.
+            // Ayoub then selects the group/customer.
+            window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
         }
     </script>
 </body>
